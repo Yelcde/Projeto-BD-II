@@ -352,15 +352,10 @@ join produto PR on IP.codprod = PR.codprod
 group by (P.codped, C.codcli, A.codaten)
 order by sum(PR.preco);
 
--- Crie uma view para exibir um relatório de fornecedores, exibindo:
--- nome do fornecedor, quantidade de itens fornecidos e quantidade
--- de produtos vendidos desse fornecimento
+-- Crie uma view para exibir um relatório de fornecimento, exibindo o
+-- nome do fornecedor, o produto fornecido e a quantidade fornecida
 
-select * from fornecimento;
-
-create or replace view relatorioFornecedores as
-select *
-from fornecimento FR
-join fornecedor F on FR.codfor = F.codfor
+select F.nome, P.nome, FR.quantidade from fornecedor F
+join fornecimento FR on F.codfor = FR.codfor
 join produto P on FR.codprod = P.codprod
-order by FR.codprod;
+order by F.nome;
