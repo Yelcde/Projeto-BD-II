@@ -325,3 +325,42 @@ where codprod in (
 
 select nome, salario from atendente
 where salario < (select avg(salario) from atendente);
+
+
+-- b) Views
+
+-- Crie uma view para exibir somente o cnpj dos fornecedores. Ela também
+-- deve permitir inserções
+
+create or replace view cnpjFornecedores as
+select cnpj from fornecedor;
+
+-- Crie uma view para exibir um relatório de pedidos, exibindo:
+-- nome do cliente, nome do atendente, data do pedido, quantidade de itens
+-- e valor total do pedido.
+
+create or replace view relatorioPedidos as
+select
+	C.nome "Cliente", A.nome "Atendente",
+	P.data "Data do Pedido", sum(IP.quantidade) "Qtd Itens",
+	sum(PR.preco * IP.quantidade) "Total Valor"
+from itenspedido IP
+join pedido P on IP.codped = P.codped
+join atendente A on P.codaten = A.codaten
+join cliente C on P.codcli = C.codcli
+join produto PR on IP.codprod = PR.codprod
+group by (P.codped, C.codcli, A.codaten)
+order by sum(PR.preco);
+
+-- Crie uma view para exibir um relatório de fornecedores, exibindo:
+-- nome do fornecedor, quantidade de itens fornecidos e quantidade
+-- de produtos vendidos desse fornecimento
+
+select * from fornecimento;
+
+create or replace view relatorioFornecedores as
+select *
+from fornecimento FR
+join fornecedor F on FR.codfor = F.codfor
+join produto P on FR.codprod = P.codprod
+order by FR.codprod;
