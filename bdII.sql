@@ -361,6 +361,17 @@ join produto P on FR.codprod = P.codprod
 order by F.nome;
 
 
+-- c) Índices
+
+-- Campo "data" de fornecimento, é um campo comumente usado em comparação de intervalos
+create index dataFornecimento on fornecimento(data);
+-- Campo "nome" de produto, campo muito procurado em cláusulas where, group by e order by
+create index nomeProduto on produto(nome);
+-- Campo "salário" de atendente, campo usado para comparação de intervalos, somatória de valores
+-- e comparação com média de salários
+create index salarioAtendente on atendente(salario);
+
+
 -- d) Reescrita de consultas
 
 -- Consulta a ser reescrita: Exiba os atendentes que não atenderam pedidos.
