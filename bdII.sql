@@ -237,3 +237,91 @@ insert into itenspedido (codped, codprod, quantidade) values (18, 8, 3);
 insert into itenspedido (codped, codprod, quantidade) values (18, 10, 2);
 insert into itenspedido (codped, codprod, quantidade) values (18, 12, 1);
 select * from itenspedido;
+
+-- a) ii - Consultas Variadas
+
+-- Exibir relatório de produtos fornecidos entre os meses 1 e 3, mostrando
+-- nome do produto, quantidade fornecida, mês de fornecimento e nome do fornecedor
+
+select
+	P.nome "Produto", FR.quantidade "Quantidade",
+	extract(month from FR.data) "Mês fornecimento",
+	F.nome "Fornecedor"
+from produto P
+join fornecimento FR on P.codprod = FR.codprod
+join fornecedor F on FR.codfor = F.codfor
+where extract(month from FR.data) between 1 and 3
+order by FR.data;
+
+-- Exiba o nome dos atendentes que atenderam pedidos
+
+select distinct A.nome from atendente A
+join pedido P on A.codaten = P.codaten;
+
+-- Exiba o nome dos cliente que fizeram pedidos e foram atendidos pelo
+-- atendente Calos Silva
+
+select distinct C.nome from atendente A
+join pedido P on A.codaten = P.codaten
+join cliente C on P.codcli = C.codcli
+where A.nome = 'Carlos Silva';
+
+-- Exiba o nome e preço dos produtos fornecedos pelas fornecedoras
+-- ElectroTech e Gadget World. Exibir também o nome da fornecedora
+
+select
+	P.nome "Produto",
+	P.preco "Preço",
+	F.nome "Fornecedor"
+from produto p
+join fornecimento FR on P.codprod = FR.codprod
+join fornecedor F on FR.codfor = F.codfor
+where F.nome in ('ElectroTech', 'Gadget World')
+order by F.nome;
+
+-- Exiba todos os nomes dos atendentes e a quantidade de pedidos que
+-- eles atenderam
+
+select A.nome "Atendente", count(P.codped) "Qtd Atendimentos"
+from atendente A
+left join pedido P on A.codaten = P.codaten
+group by A.codaten
+order by A.codaten;
+
+-- Exiba o nome do fornecedor e o total de produtos que ele forneceu
+
+select F.nome "Fornecedor", count(P.codprod) "Qtd Produtos Fornecidos"
+from fornecedor F
+join fornecimento FR on F.codfor = FR.codfor
+join produto P on FR.codprod = P.codprod
+group by F.codfor
+order by F.codfor;
+
+-- Exiba o nome dos produtos que tiveram no mínimo 10 vendas. Mostre também a
+-- quantidade de vendas
+
+select P.nome "Produto", sum(IP.quantidade) "Qtd Vendida"
+from produto P
+join itenspedido IP on P.codprod = IP.codprod
+group by P.codprod
+having sum(IP.quantidade) > 9
+order by sum(IP.quantidade);
+
+-- Exiba o código dos atendentes que não atenderam pedidos
+
+select codaten from atendente
+except
+select codaten from pedido;
+
+-- Exiba o nome dos produtos fornecidos após o mês 4
+
+select nome from produto
+where codprod in (
+	select codprod from fornecimento
+	where extract(month from data) > 4
+);
+
+-- Exiba o nome e o salário dos atendentes com salário abaixo da média
+
+select nome, salario from atendente
+where salario < (select avg(salario) from atendente);
