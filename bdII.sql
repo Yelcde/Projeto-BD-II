@@ -307,7 +307,7 @@ group by P.codprod
 having sum(IP.quantidade) > 9
 order by sum(IP.quantidade);
 
--- Exiba o código dos atendentes que não atenderam pedidos
+-- Exiba os atendentes que não atenderam pedidos
 
 select codaten from atendente
 except
@@ -359,3 +359,35 @@ select F.nome, P.nome, FR.quantidade from fornecedor F
 join fornecimento FR on F.codfor = FR.codfor
 join produto P on FR.codprod = P.codprod
 order by F.nome;
+
+
+-- d) Reescrita de consultas
+
+-- Consulta a ser reescrita: Exiba os atendentes que não atenderam pedidos.
+
+	-- select codaten from atendente
+	-- except
+	-- select codaten from pedido;
+
+-- Justificativa: seria mais interessante termos acesso a mais dado do atendente,
+-- não somente ao seu código.
+
+select A.nome from atendente A
+left join pedido P on A.codaten = P.codaten
+where P.codped is null;
+
+-- Consulta a ser reescrita: Exiba o nome dos produtos fornecidos após o mês 4.
+
+	-- select nome from produto
+	-- where codprod in (
+	-- 	select codprod from fornecimento
+	-- 	where extract(month from data) > 4
+	-- );
+
+-- Justificativa: assim como na consulta anterior, seria mais interessante termos
+-- acesso a mais dados do que apenas o nome do produto, um dado interessante poderia
+-- ser a quantidade. Por isso substituímos a subquerie por um join.
+
+select P.nome, FR.quantidade from produto P
+join fornecimento FR on P.codprod = FR.codprod
+where extract(month from FR.data) > 4;
