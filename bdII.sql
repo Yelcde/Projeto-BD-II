@@ -283,10 +283,9 @@ order by F.nome;
 -- eles atenderam
 
 select A.nome "Atendente", count(P.codped) "Qtd Atendimentos"
-from atendente A
-left join pedido P on A.codaten = P.codaten
+from atendente A left join pedido P on A.codaten = P.codaten
 group by A.codaten
-order by A.codaten;
+order by A.nome;
 
 -- Exiba o nome do fornecedor e o total de produtos que ele forneceu
 
@@ -295,7 +294,7 @@ from fornecedor F
 join fornecimento FR on F.codfor = FR.codfor
 join produto P on FR.codprod = P.codprod
 group by F.codfor
-order by F.codfor;
+order by F.nome;
 
 -- Exiba o nome dos produtos que tiveram no mínimo 10 vendas. Mostre também a
 -- quantidade de vendas
@@ -333,33 +332,38 @@ where salario < (select avg(salario) from atendente);
 -- deve permitir inserções
 
 create or replace view cnpjFornecedores as
-select cnpj from fornecedor;
+	select cnpj from fornecedor;
+	select * from cnpjFornecedores;
 
 -- Crie uma view para exibir um relatório de pedidos, exibindo:
 -- nome do cliente, nome do atendente, data do pedido, quantidade de itens
 -- e valor total do pedido.
 
 create or replace view relatorioPedidos as
-select
-	C.nome "Cliente", A.nome "Atendente",
-	P.data "Data do Pedido", sum(IP.quantidade) "Qtd Itens",
-	sum(PR.preco * IP.quantidade) "Total Valor"
-from itenspedido IP
-join pedido P on IP.codped = P.codped
-join atendente A on P.codaten = A.codaten
-join cliente C on P.codcli = C.codcli
-join produto PR on IP.codprod = PR.codprod
-group by (P.codped, C.codcli, A.codaten)
-order by sum(PR.preco);
+	select
+		C.nome "Cliente", A.nome "Atendente",
+		P.data "Data do Pedido", sum(IP.quantidade) "Qtd Itens",
+		sum(PR.preco * IP.quantidade) "Total Valor"
+	from itenspedido IP
+	join pedido P on IP.codped = P.codped
+	join atendente A on P.codaten = A.codaten
+	join cliente C on P.codcli = C.codcli
+	join produto PR on IP.codprod = PR.codprod
+	group by (P.codped, C.codcli, A.codaten)
+	order by sum(PR.preco * IP.quantidade);
+select * from relatorioPedidos;
 
 -- Crie uma view para exibir um relatório de fornecimento, exibindo o
--- nome do fornecedor, o produto fornecido e a quantidade fornecida
+-- nome do fornecedor, o produto fornecido e a quantidade fornecida em um mês especifico
 
-select F.nome, P.nome, FR.quantidade from fornecedor F
-join fornecimento FR on F.codfor = FR.codfor
-join produto P on FR.codprod = P.codprod
-order by F.nome;
-
+create or replace view relatorioFornecimento as
+	select F.nome "Fornecedor", P.nome "Produto", FR.quantidade "Quantidade"
+	from fornecedor F
+	join fornecimento FR on F.codfor = FR.codfor
+	join produto P on FR.codprod = P.codprod
+	where extract(month from FR.data) = 1
+	order by F.nome;
+select * from relatorioFornecimento;
 
 -- c) Índices
 
