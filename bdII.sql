@@ -406,3 +406,26 @@ where P.codped is null;
 select P.nome, FR.quantidade from produto P
 join fornecimento FR on P.codprod = FR.codprod
 where extract(month from FR.data) > 4;
+
+-- e) Funções e procedures armazenadas
+
+-- 1 função que use SUM, MAX, MIN, AVG ou COUNT
+
+-- -- Verificando a quantidade vendida de cada produto da loja
+
+create or replace function somaDeVenda()
+	returns void
+	as $$
+		begin
+			select PR.nome, sum(IP.quantidade) 
+			from pedido P
+			join itenspedido IP on P.codped = IP.codped
+			join produto PR on IP.codprod = PR.codprod
+			group by PR.nome
+			order by sum(IP.quantidade);
+		end;
+	$$ language 'plpgsql';
+	
+-- 2 funções e 1 procedure com justificativa semântica, conforme os requisitos da aplicação
+
+-- -- 
