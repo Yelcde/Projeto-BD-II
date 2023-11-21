@@ -413,22 +413,43 @@ where extract(month from FR.data) > 4;
 
 -- -- Verificando a quantidade vendida de cada produto da loja
 
-create or replace function somaDeVenda()
-	returns void
-	as $$
-		declare 
-			nome atendente.nome%type;
-			vendas atendente.codaten%type;
-		begin
-			select PR.nome, sum(IP.quantidade) 
-			from pedido P join itenspedido IP on P.codped = IP.codped
-			join produto PR on IP.codprod = PR.codprod
-			group by PR.nome
-			order by sum(IP.quantidade);
-		end;
-	$$ language 'plpgsql';
+-- create or replace function somaDeVenda()
+-- 	returns void
+-- 	as $$
+-- 		declare 
+-- 			nome atendente.nome%type;
+-- 			vendas atendente.codaten%type;
+-- 		begin
+-- 			select PR.nome, sum(IP.quantidade) 
+-- 			from pedido P join itenspedido IP on P.codped = IP.codped
+-- 			join produto PR on IP.codprod = PR.codprod
+-- 			group by PR.nome
+-- 			order by sum(IP.quantidade);
+-- 		end;
+-- 	$$ language 'plpgsql';
 
-select somaDeVenda();
+-- select somaDeVenda();
+
+CREATE OR REPLACE FUNCTION mostrar_quantidade_vendida()
+RETURNS TABLE (
+    produto_nome VARCHAR(50),
+    quantidade_vendida bigint
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        P.nome as produto_nome,
+        SUM(IP.quantidade) as quantidade_vendida
+    FROM produto P
+    LEFT JOIN itenspedido IP ON P.codprod = IP.codprod
+    GROUP BY P.codprod, P.nome
+	order by sum(IP.quantidade);
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM mostrar_quantidade_vendida();
+
+--drop function mostrar_quantidade_vendida
 
 -- 2 funções e 1 procedure com justificativa semântica, conforme os requisitos da aplicação
 
