@@ -416,16 +416,37 @@ where extract(month from FR.data) > 4;
 create or replace function somaDeVenda()
 	returns void
 	as $$
+		declare 
+			nome atendente.nome%type;
+			vendas atendente.codaten%type;
 		begin
 			select PR.nome, sum(IP.quantidade) 
-			from pedido P
-			join itenspedido IP on P.codped = IP.codped
+			from pedido P join itenspedido IP on P.codped = IP.codped
 			join produto PR on IP.codprod = PR.codprod
 			group by PR.nome
 			order by sum(IP.quantidade);
 		end;
 	$$ language 'plpgsql';
-	
+
+select somaDeVenda();
+
 -- 2 funções e 1 procedure com justificativa semântica, conforme os requisitos da aplicação
 
--- -- 
+-- -- Verificar quantas vendas um vendedor fez
+
+create or replace procedure qntVendas(codigoaten integer)
+	language plpgsql
+	as $$
+		declare 
+			nome atendente.nome%type;
+			vendas atendente.codaten%type;
+		begin
+			select A.nome "Nome", count(P.codaten) "Vendas" into nome, vendas
+			from atendente A join pedido P on P.codaten = A.codaten
+			where A.codaten = codigoaten
+			group by A.nome;
+			
+			raise notice 'Nome: %, Quantidade de Vendas: %', nome, vendas;
+	end $$;
+
+call qntVendas(3);
