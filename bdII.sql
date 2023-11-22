@@ -411,49 +411,30 @@ where extract(month from FR.data) > 4;
 
 -- 1 função que use SUM, MAX, MIN, AVG ou COUNT
 
--- -- Verificando a quantidade vendida de cada produto da loja
+-- Verificando a quantidade vendida de cada produto da loja
 
--- create or replace function somaDeVenda()
--- 	returns void
--- 	as $$
--- 		declare 
--- 			nome atendente.nome%type;
--- 			vendas atendente.codaten%type;
--- 		begin
--- 			select PR.nome, sum(IP.quantidade) 
--- 			from pedido P join itenspedido IP on P.codped = IP.codped
--- 			join produto PR on IP.codprod = PR.codprod
--- 			group by PR.nome
--- 			order by sum(IP.quantidade);
--- 		end;
--- 	$$ language 'plpgsql';
-
--- select somaDeVenda();
-
-CREATE OR REPLACE FUNCTION mostrar_quantidade_vendida()
-RETURNS TABLE (
+create or replace function mostrar_quantidade_vendida()
+returns table (
     produto_nome VARCHAR(50),
     quantidade_vendida bigint
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT
+) as $$
+begin
+    return query
+    select
         P.nome as produto_nome,
-        SUM(IP.quantidade) as quantidade_vendida
-    FROM produto P
-    LEFT JOIN itenspedido IP ON P.codprod = IP.codprod
-    GROUP BY P.codprod, P.nome
+        sum(IP.quantidade) as quantidade_vendida
+    from produto P
+    left join itenspedido IP on P.codprod = IP.codprod
+    group by P.codprod, P.nome
 	order by sum(IP.quantidade);
-END;
-$$ LANGUAGE plpgsql;
+end;
+$$ language plpgsql;
 
-SELECT * FROM mostrar_quantidade_vendida();
-
---drop function mostrar_quantidade_vendida
+select * from mostrar_quantidade_vendida();
 
 -- 2 funções e 1 procedure com justificativa semântica, conforme os requisitos da aplicação
 
--- -- Verificar quantas vendas um vendedor fez
+-- Verificar quantas vendas um atendente fez
 
 create or replace procedure qntVendas(codigoaten integer)
 	language plpgsql
@@ -470,4 +451,41 @@ create or replace procedure qntVendas(codigoaten integer)
 			raise notice 'Nome: %, Quantidade de Vendas: %', nome, vendas;
 	end $$;
 
-call qntVendas(3);
+call qntVendas(5);
+
+-- Criar função para exibir o produto fornecido de um determinado fabricante
+
+create or replace function produtoMaisFornecido(cod_for integer) returns void
+as $$
+	declare
+		nome_prod produto.nome%type;
+		qtd_fornecidos integer;
+		cursor_prod_fornecedores cursor for select P.nome, FR.quantidade
+		from fornecedor F
+		join fornecimento FR on FR.codfor = F.codfor
+		join produto P on P.codprod = FR.codprod
+		where F.codfor = cod_for;
+	
+	begin
+		if cod_for not in (select codfor from fornecedor) then
+			raise exception 'Fornecedor inexistente';
+		end if;
+		
+		qtd_fornecidos = 0;
+		
+		for c_prod_for in cursor_prod_fornecedores loop
+			if c_prod_for.quantidade > qtd_fornecidos then
+				qtd_fornecidos = c_prod_for.quantidade;
+				nome_prod = c_prod_for.nome;
+			end if;
+		end loop;
+		
+		raise notice 'Produto: %, Fornecidos: %', nome_prod, qtd_fornecidos;
+	
+	exception
+		when raise_exception then
+			raise notice 'Fornecedor inexistente';
+end;
+$$ language plpgsql;
+
+select produtoMaisFornecido(4);
