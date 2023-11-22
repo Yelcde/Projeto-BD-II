@@ -430,26 +430,26 @@ where extract(month from FR.data) > 4;
 
 -- select somaDeVenda();
 
-CREATE OR REPLACE FUNCTION mostrar_quantidade_vendida()
-RETURNS TABLE (
-    produto_nome VARCHAR(50),
-    quantidade_vendida bigint
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT
-        P.nome as produto_nome,
-        SUM(IP.quantidade) as quantidade_vendida
-    FROM produto P
-    LEFT JOIN itenspedido IP ON P.codprod = IP.codprod
-    GROUP BY P.codprod, P.nome
-	order by sum(IP.quantidade);
-END;
-$$ LANGUAGE plpgsql;
+create or replace function mostrar_quantidade_vendida()
+    returns table (
+        Produto VARCHAR(50),
+        Vendas bigint
+    ) as $$
+        begin
+            return query
+            select
+                P.nome as Produto,
+                sum(IP.quantidade) as Vendas
+            from produto P
+            left join itenspedido IP on P.codprod = IP.codprod
+            group by P.codprod, P.nome
+            order by sum(IP.quantidade);
+        end;
+    $$ language plpgsql;
 
-SELECT * FROM mostrar_quantidade_vendida();
+select * from mostrar_quantidade_vendida();
 
---drop function mostrar_quantidade_vendida
+-- drop function mostrar_quantidade_vendida
 
 -- 2 funções e 1 procedure com justificativa semântica, conforme os requisitos da aplicação
 
@@ -467,7 +467,13 @@ create or replace procedure qntVendas(codigoaten integer)
 			where A.codaten = codigoaten
 			group by A.nome;
 			
+            if nome is null then
+                raise exception 'Código não encontrado';
+            end if;
+            
 			raise notice 'Nome: %, Quantidade de Vendas: %', nome, vendas;
 	end $$;
 
-call qntVendas(3);
+call qntVendas(10);
+
+-- -- 
