@@ -496,7 +496,8 @@ select produtoMaisFornecido(4);
 
 -- f) Triggers
 
--- -- Trigger que verifica 
+-- Criar um trigger para impedir criação de pedidos com datas passadas
+
 create or replace function verificaData()
     returns trigger
     as $$
@@ -514,3 +515,30 @@ create trigger trigger_verifica_data
         for each row execute procedure verificaData();
 
 insert into pedido (data, codcli, codaten) values ('2023-11-10', 14, 14);
+
+-- Criar um trigger para impedir o aumento exagerado de preço de produto.
+-- O novo preço só pode ser 50% a mais do preço antigo.
+
+create or replace function aumentoLimite() returns trigger
+as $$
+	declare preco_limite produto.preco%type;
+	
+	begin
+		preco_limite = old.preco + (old.preco * 0.5);
+		raise notice 'Preço: %',preco_limite;
+		
+		if new.preco > preco_limite then
+			return old;
+		else
+			return new;
+		end if;
+end;
+$$ language plpgsql;
+
+create trigger limiteDeAtualizacaoPreco before update
+on produto for each row
+execute procedure aumentoLimite();
+
+select * from produto where codprod = 8;
+update produto set preco = 1050 where codprod = 8;
+select * from produto where codprod = 8;
