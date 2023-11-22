@@ -496,8 +496,7 @@ select produtoMaisFornecido(4);
 
 -- f) Triggers
 
--- Criar um trigger para impedir criação de pedidos com datas passadas
-
+-- -- Trigger que verifica se a data do pedido é anterior a hoje
 create or replace function verificaData()
     returns trigger
     as $$
@@ -525,6 +524,7 @@ as $$
 	
 	begin
 		preco_limite = old.preco + (old.preco * 0.5);
+		raise exception 'Preço: %',preco_limite;
 		
 		if new.preco > preco_limite then
 			return old;
@@ -541,3 +541,34 @@ execute procedure aumentoLimite();
 select * from produto where codprod = 8;
 update produto set preco = 1050 where codprod = 8;
 select * from produto where codprod = 8;
+
+-- -- Trigger que verifica se o aumento no salario do vendedor
+-- -- é maior que 25% do salário atual
+
+create or replace function verificaAumento()
+    returns trigger 
+    as $$
+        declare 
+            salarioAumentado numeric;
+        begin
+            salarioAumentado := (old.salario * 0.25) + old.salario;
+            if new.salario > salarioAumentado then
+                raise exception 'Erro: O aumento do salário não pode passar dos 25%%';
+            end if;
+            
+            return new;
+        end;
+    $$ language plpgsql;
+    
+create trigger trigger_verificaAumento
+    before update on atendente
+        for each row execute procedure verificaAumento()
+    
+-- -- Salário atual de Mariana
+insert into atendente (nome, salario) values ('Mariana Oliveira', 3000.50);
+
+-- -- Salário 1 digito acima dos 25% que é 750.125
+update atendente 
+set salario = 3750.625
+where codaten = 1;
+select * from atendente
