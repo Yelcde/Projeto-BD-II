@@ -411,7 +411,7 @@ where extract(month from FR.data) > 4;
 
 -- 1 função que use SUM, MAX, MIN, AVG ou COUNT
 
--- Verificando a quantidade vendida de cada produto da loja
+-- -- Verificando a quantidade vendida de cada produto da loja
 
 create or replace function mostrar_quantidade_vendida()
 returns table (
@@ -434,7 +434,7 @@ select * from mostrar_quantidade_vendida();
 
 -- 2 funções e 1 procedure com justificativa semântica, conforme os requisitos da aplicação
 
--- Verificar quantas vendas um atendente fez
+-- -- Verificar quantas vendas um atendente fez
 
 create or replace procedure qntVendas(codigoaten integer)
 	language plpgsql
@@ -457,7 +457,7 @@ create or replace procedure qntVendas(codigoaten integer)
 
 call qntVendas(5);
 
--- Criar função para exibir o produto fornecido de um determinado fabricante
+-- -- Criar função para exibir o produto fornecido de um determinado fabricante
 
 create or replace function produtoMaisFornecido(cod_for integer) returns void
 as $$ 
@@ -493,3 +493,24 @@ end;
 $$ language plpgsql;
 
 select produtoMaisFornecido(4);
+
+-- f) Triggers
+
+-- -- Trigger que verifica 
+create or replace function verificaData()
+    returns trigger
+    as $$
+        begin
+            if new.data < current_date then
+                raise exception 'Erro: A data do pedido não pode ser no passado.';
+            end if;
+            
+            return new;
+        end;
+    $$ language plpgsql;
+    
+create trigger trigger_verifica_data
+    before insert on pedido
+        for each row execute procedure verificaData();
+
+insert into pedido (data, codcli, codaten) values ('2023-11-10', 14, 14);
