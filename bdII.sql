@@ -525,7 +525,6 @@ as $$
 	
 	begin
 		preco_limite = old.preco + (old.preco * 0.5);
-		raise notice 'Preço: %',preco_limite;
 		
 		if new.preco > preco_limite then
 			return old;
